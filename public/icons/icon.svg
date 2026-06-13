@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="WebLens icon">
+  <rect width="128" height="128" rx="24" fill="#1f6feb"/>
+  <circle cx="58" cy="58" r="28" fill="none" stroke="#ffffff" stroke-width="10"/>
+  <path d="M79 79l25 25" stroke="#ffffff" stroke-width="12" stroke-linecap="round"/>
+  <path d="M37 55h42M58 34v48" stroke="#b9dcff" stroke-width="7" stroke-linecap="round"/>
+</svg>
