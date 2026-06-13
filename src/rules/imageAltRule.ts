@@ -7,7 +7,7 @@ export const imageAltRule: AuditRule = {
   title: "图片缺少替代文本",
   category: "accessibility",
   severity: "warning",
-  description: "图片需要 alt 属性帮助屏幕阅读器理解内容。空 alt 可能是装饰性图片，因此仅记录缺失 alt 的图片。",
+  description: "图片需要 alt 属性帮助屏幕阅读器理解内容。空 alt 可能是装饰性图片，因此仅记录缺少 alt 的图片。",
   check: () => {
     return Array.from(document.querySelectorAll("img:not([alt])")).map<AuditIssue>((image, index) => {
       const selector = createStableSelector(image);

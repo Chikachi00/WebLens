@@ -6,7 +6,7 @@ chrome.runtime.onMessage.addListener(
   (message: ExtensionMessage, _sender, sendResponse: (response: ExtensionResponse) => void) => {
     if (message.type === "RUN_AUDIT") {
       clearHighlight();
-      sendResponse({ ok: true, payload: runAudit() });
+      sendResponse({ ok: true, payload: runAudit(message.payload) });
       return false;
     }
 

@@ -23,6 +23,22 @@ export interface AuditIssue {
   codeSuggestion?: string;
 }
 
+export interface IgnoredIssueRecord {
+  id: string;
+  ruleId: string;
+  selector: string;
+  scope: "page" | "site";
+  target: string;
+  pageTitle?: string;
+  ruleTitle?: string;
+  createdAt: string;
+}
+
+export interface WebLensSettings {
+  disabledRuleIds: string[];
+  ignoredIssues: IgnoredIssueRecord[];
+}
+
 export interface AuditSummary {
   total: number;
   critical: number;
@@ -39,12 +55,20 @@ export interface PageInfo {
 export interface AuditReport {
   page: PageInfo;
   issues: AuditIssue[];
+  ignoredIssues: AuditIssue[];
   summary: AuditSummary;
   scannedAt: string;
+  enabledRuleIds: string[];
+  disabledRuleIds: string[];
+}
+
+export interface RunAuditPayload {
+  enabledRuleIds: string[];
+  ignoredIssues: IgnoredIssueRecord[];
 }
 
 export type ExtensionMessage =
-  | { type: "RUN_AUDIT" }
+  | { type: "RUN_AUDIT"; payload?: RunAuditPayload }
   | { type: "AUDIT_RESULT"; payload: AuditReport }
   | { type: "HIGHLIGHT_ELEMENT"; selector: string }
   | { type: "CLEAR_HIGHLIGHT" }

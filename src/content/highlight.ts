@@ -1,4 +1,5 @@
-import { HIGHLIGHT_CLASS_NAME, HIGHLIGHT_DURATION_MS } from "../shared/constants";
+const HIGHLIGHT_CLASS_NAME = "weblens-highlight-target";
+const HIGHLIGHT_DURATION_MS = 3000;
 
 let activeElement: Element | null = null;
 let activeTimeout: number | null = null;

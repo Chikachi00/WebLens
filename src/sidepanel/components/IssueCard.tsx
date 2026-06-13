@@ -1,17 +1,20 @@
 import { useState } from "react";
 import { SeverityBadge } from "./Badge";
-import type { AuditIssue } from "../../shared/types";
+import type { AuditIssue, IgnoredIssueRecord } from "../../shared/types";
 
 export function IssueCard({
   issue,
   onLocate,
-  onCopy
+  onCopy,
+  onIgnore
 }: {
   issue: AuditIssue;
   onLocate: (issue: AuditIssue) => void;
   onCopy: (code: string) => void;
+  onIgnore: (issue: AuditIssue, scope: IgnoredIssueRecord["scope"]) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [ignoreOpen, setIgnoreOpen] = useState(false);
 
   return (
     <article className="rounded-md border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-800">
@@ -43,6 +46,39 @@ export function IssueCard({
         >
           {expanded ? "收起建议" : "查看建议"}
         </button>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setIgnoreOpen((current) => !current)}
+            className="min-h-9 rounded-md border border-slate-300 px-3 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+          >
+            忽略
+          </button>
+          {ignoreOpen ? (
+            <div className="absolute right-0 z-10 mt-1 w-40 rounded-md border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+              <button
+                type="button"
+                onClick={() => {
+                  onIgnore(issue, "page");
+                  setIgnoreOpen(false);
+                }}
+                className="block min-h-8 w-full rounded px-2 text-left text-xs text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                仅在当前页面忽略
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onIgnore(issue, "site");
+                  setIgnoreOpen(false);
+                }}
+                className="block min-h-8 w-full rounded px-2 text-left text-xs text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                在当前网站忽略
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {expanded ? (

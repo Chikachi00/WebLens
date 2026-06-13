@@ -2,9 +2,9 @@
 
 [中文](./README.md)
 
-WebLens is a Chrome browser extension for beginner frontend developers and individual makers. It runs in the Chrome Side Panel, audits the current page locally for common UI, HTML semantics, and accessibility issues, then helps users locate affected elements, understand the reason, and copy basic fix examples.
+WebLens is a Chrome browser extension for beginner frontend developers and individual makers. It runs in the Chrome Side Panel, audits the current page locally for common UI, HTML semantics, and accessibility issues, then helps users locate affected elements, understand the reason, ignore false positives, manage rules, and export reports.
 
-V0.1 does not include AI, accounts, cloud sync, databases, or backend services.
+Current version: V0.2.0. The project does not include AI, accounts, cloud sync, databases, or backend services.
 
 ## Current Features
 
@@ -15,6 +15,13 @@ V0.1 does not include AI, accounts, cloud sync, databases, or backend services.
 - Filters for critical, warning, and info issues
 - Scroll and highlight target elements from results
 - Issue explanations, recommendations, and copyable code examples
+- Independent toggles for all 8 audit rules
+- Page-level issue ignores
+- Site-level issue ignores
+- Ignored issue management and restore actions
+- Markdown report export
+- JSON report export
+- Local settings persistence
 - Light and dark mode support
 
 ## Audit Rules
@@ -30,7 +37,7 @@ V0.1 does not include AI, accounts, cloud sync, databases, or backend services.
 
 ## Screenshots
 
-> Screenshot placeholder: after installing V0.1 and running an audit, add side panel screenshots and element-highlight screenshots here.
+> Screenshot placeholder: after installing V0.2 and running an audit, add side panel, settings panel, ignored issue list, and exported report screenshots here. Do not fake screenshots.
 
 ## Tech Stack
 
@@ -42,6 +49,7 @@ V0.1 does not include AI, accounts, cloud sync, databases, or backend services.
 - ESLint
 - Vitest
 - Chrome Side Panel API
+- `chrome.storage.local`
 
 ## Local Development
 
@@ -92,28 +100,35 @@ WebLens/
 
 ## Privacy
 
-- V0.1 does not upload page content.
+- V0.2 does not upload page content.
 - Audits run locally in the user’s browser.
 - WebLens does not collect browsing history.
 - WebLens does not save web form content.
 - WebLens does not access pages that the user has not actively analyzed.
+- User settings are stored only in `chrome.storage.local`.
+- Ignore records store only rule IDs, selectors, ignore scopes, and target page URLs or hostnames.
+- Report export is triggered manually by the user.
+- Reports are never uploaded automatically.
 
 ## Current Limitations
 
 - Automated checks cannot replace manual UI and accessibility testing.
 - Some findings may be false positives.
+- Selectors may become invalid after dynamic page updates.
+- Ignored results depend on URL and selector matching.
 - Full cross-iframe auditing is not supported yet.
 - Deep Shadow DOM auditing is not supported yet.
 - AI-powered fixes are not provided yet.
 - WebLens does not automatically modify page code.
+- Reports do not represent full accessibility compliance certification.
 
 ## Roadmap
 
-- Add rule configuration and ignore lists
-- Add result export
-- Add more layout, accessibility, and semantic rules
+- Add more audit rules
+- Add real browser end-to-end tests
 - Improve iframe and Shadow DOM support
-- Add broader browser end-to-end validation
+- Add optional fix previews
+- Evaluate AI-powered fix explanations in a later version
 
 ## License
 
