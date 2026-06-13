@@ -1,4 +1,13 @@
-import type { AuditReport, ExtensionMessage, ExtensionResponse, PageInfo, RunAuditPayload } from "../shared/types";
+import type {
+  ActivePreview,
+  AuditReport,
+  ExtensionMessage,
+  ExtensionResponse,
+  PageInfo,
+  PreviewActionResult,
+  PreviewFix,
+  RunAuditPayload
+} from "../shared/types";
 
 export interface ActiveTabInfo {
   id: number;
@@ -27,6 +36,10 @@ export async function getActiveTabId(): Promise<number> {
 
 export async function sendMessageToActiveTab(message: ExtensionMessage): Promise<ExtensionResponse> {
   const tabId = await getActiveTabId();
+  return sendMessageToTab(tabId, message);
+}
+
+export async function sendMessageToTab(tabId: number, message: ExtensionMessage): Promise<ExtensionResponse> {
   return chrome.tabs.sendMessage(tabId, message);
 }
 
@@ -53,6 +66,54 @@ export async function requestElementHighlight(selector: string): Promise<void> {
   if (!response.ok) {
     throw new Error(response.error);
   }
+}
+
+export async function applyFixPreview(issueId: string, ruleId: string, selector: string, fix: PreviewFix): Promise<PreviewActionResult> {
+  const response = await sendMessageToActiveTab({
+    type: "APPLY_FIX_PREVIEW",
+    payload: { issueId, ruleId, selector, fix }
+  });
+  if (!response.ok) {
+    throw new Error(response.error);
+  }
+
+  return response.payload as PreviewActionResult;
+}
+
+export async function revertFixPreview(issueId: string): Promise<PreviewActionResult> {
+  const response = await sendMessageToActiveTab({ type: "REVERT_FIX_PREVIEW", payload: { issueId } });
+  if (!response.ok) {
+    throw new Error(response.error);
+  }
+
+  return response.payload as PreviewActionResult;
+}
+
+export async function revertAllFixPreviews(): Promise<PreviewActionResult> {
+  const response = await sendMessageToActiveTab({ type: "REVERT_ALL_FIX_PREVIEWS" });
+  if (!response.ok) {
+    throw new Error(response.error);
+  }
+
+  return response.payload as PreviewActionResult;
+}
+
+export async function revertAllFixPreviewsInTab(tabId: number): Promise<PreviewActionResult> {
+  const response = await sendMessageToTab(tabId, { type: "REVERT_ALL_FIX_PREVIEWS" });
+  if (!response.ok) {
+    throw new Error(response.error);
+  }
+
+  return response.payload as PreviewActionResult;
+}
+
+export async function getActiveFixPreviews(): Promise<ActivePreview[]> {
+  const response = await sendMessageToActiveTab({ type: "GET_ACTIVE_FIX_PREVIEWS" });
+  if (!response.ok) {
+    throw new Error(response.error);
+  }
+
+  return response.payload as ActivePreview[];
 }
 
 function getDomain(url: string): string {

@@ -41,6 +41,7 @@ describe("report export", () => {
     const markdown = createMarkdownReport(report, new Date("2026-06-14T06:30:00"));
 
     expect(markdown).toContain("# WebLens 网页检测报告");
+    expect(markdown).toContain("修复预览只在当前浏览器页面中临时生效");
     expect(markdown).toContain("Example \\| Page \\[Test\\]");
     expect(markdown).toContain("## 严重问题");
     expect(markdown).toContain("```html");

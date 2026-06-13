@@ -9,6 +9,7 @@ export const touchTargetRule: AuditRule = {
   title: "交互元素点击区域过小",
   category: "usability",
   severity: "info",
+  supportsPreview: true,
   description: "过小的点击区域会增加触控设备上的误操作概率。",
   check: () => {
     const elements = Array.from(
@@ -34,7 +35,11 @@ export const touchTargetRule: AuditRule = {
           recommendation: "为按钮和图标操作增加内边距或最小尺寸。普通文本链接可以结合上下文判断是否需要调整。",
           selector,
           elementTag: getElementTag(element),
-          codeSuggestion: ".button {\n  min-width: 44px;\n  min-height: 44px;\n}"
+          codeSuggestion: ".button {\n  min-width: 44px;\n  min-height: 44px;\n}",
+          supportsPreview: true,
+          previewFix: { type: "style", styles: { "min-width": "44px", "min-height": "44px" } },
+          previewBefore: [`当前尺寸：${Math.round(rect.width)} x ${Math.round(rect.height)} px`],
+          previewAfter: ["预览尺寸：至少 44 x 44 px"]
         };
       });
   }

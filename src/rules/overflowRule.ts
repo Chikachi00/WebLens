@@ -9,6 +9,7 @@ export const overflowRule: AuditRule = {
   title: "页面横向溢出",
   category: "layout",
   severity: "warning",
+  supportsPreview: false,
   description: "页面内容宽度不应意外超出视口宽度。",
   check: () => {
     const viewportWidth = document.documentElement.clientWidth;
@@ -40,7 +41,7 @@ export const overflowRule: AuditRule = {
 };
 
 function findOverflowElements(viewportWidth: number): Element[] {
-  return Array.from(document.body.querySelectorAll("*")).filter((element) => {
+    return Array.from(document.body.querySelectorAll("*:not([data-weblens-injected='true'])")).filter((element) => {
     const tagName = element.tagName.toLowerCase();
     if (IGNORED_VISUAL_TAGS.has(tagName) || !isElementVisible(element) || isInsideHorizontalScroller(element)) {
       return false;

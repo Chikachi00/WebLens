@@ -1,7 +1,8 @@
+import { getPreviewType } from "./preview";
 import { getRuleTitle } from "./ruleMetadata";
 import type { AuditIssue, AuditReport } from "./types";
 
-export const WEBLENS_VERSION = "0.2.0";
+export const WEBLENS_VERSION = "0.3.0";
 
 export interface ExportedAuditReport {
   schemaVersion: "1.0";
@@ -26,8 +27,12 @@ export interface ExportedAuditReport {
     info: number;
     ignored: number;
   };
-  issues: AuditIssue[];
-  ignoredIssues: AuditIssue[];
+  preview: {
+    supportedIssueCount: number;
+    note: string;
+  };
+  issues: Array<AuditIssue & { supportsPreview: boolean; previewType?: string }>;
+  ignoredIssues: Array<AuditIssue & { supportsPreview: boolean; previewType?: string }>;
 }
 
 export function createJsonReport(report: AuditReport): string {
@@ -47,8 +52,12 @@ export function createJsonReport(report: AuditReport): string {
       ...report.summary,
       ignored: report.ignoredIssues.length
     },
-    issues: report.issues,
-    ignoredIssues: report.ignoredIssues
+    preview: {
+      supportedIssueCount: [...report.issues, ...report.ignoredIssues].filter((issue) => issue.supportsPreview).length,
+      note: "Preview changes are temporary and are not included in this report."
+    },
+    issues: report.issues.map(withPreviewMetadata),
+    ignoredIssues: report.ignoredIssues.map(withPreviewMetadata)
   };
 
   return JSON.stringify(exported, null, 2);
@@ -57,6 +66,8 @@ export function createJsonReport(report: AuditReport): string {
 export function createMarkdownReport(report: AuditReport, generatedAt = new Date()): string {
   const lines: string[] = [
     "# WebLens 网页检测报告",
+    "",
+    "> WebLens 的修复预览只在当前浏览器页面中临时生效，不会修改网站源代码。",
     "",
     `- 页面：${escapeMarkdownText(report.page.title || "未命名页面")}`,
     `- 地址：${escapeMarkdownText(report.page.url || "")}`,
@@ -71,6 +82,7 @@ export function createMarkdownReport(report: AuditReport, generatedAt = new Date
     `| 警告 | ${report.summary.warning} |`,
     `| 提示 | ${report.summary.info} |`,
     `| 已忽略 | ${report.ignoredIssues.length} |`,
+    `| 支持预览 | ${[...report.issues, ...report.ignoredIssues].filter((issue) => issue.supportsPreview).length} |`,
     ""
   ];
 
@@ -93,6 +105,14 @@ export function createSafeReportFilename(domain: string, extension: "md" | "json
   return `weblens-${safeDomain || "page"}-${formatFilenameDate(date)}.${extension}`;
 }
 
+function withPreviewMetadata(issue: AuditIssue): AuditIssue & { supportsPreview: boolean; previewType?: string } {
+  return {
+    ...issue,
+    supportsPreview: Boolean(issue.supportsPreview),
+    previewType: getPreviewType(issue.previewFix)
+  };
+}
+
 function appendIssueSection(lines: string[], title: string, issues: AuditIssue[]): void {
   lines.push(`## ${title}`, "");
 
@@ -106,6 +126,7 @@ function appendIssueSection(lines: string[], title: string, issues: AuditIssue[]
     lines.push(`- 元素：\`${escapeCodeSpan(issue.selector)}\``);
     lines.push(`- 说明：${escapeMarkdownText(issue.description)}`);
     lines.push(`- 建议：${escapeMarkdownText(issue.recommendation)}`);
+    lines.push(`- 支持预览：${issue.supportsPreview ? "是" : "否"}`);
     if (issue.codeSuggestion) {
       lines.push("- 修复示例：", "", "```html", issue.codeSuggestion, "```");
     }

@@ -8,6 +8,7 @@ export const headingOrderRule: AuditRule = {
   title: "标题层级跳跃",
   category: "semantics",
   severity: "warning",
+  supportsPreview: false,
   description: "标题层级应反映页面结构，避免从较高层级直接跳到过深层级。",
   check: () => {
     const headingElements = Array.from(document.querySelectorAll("h1, h2, h3, h4, h5, h6"));

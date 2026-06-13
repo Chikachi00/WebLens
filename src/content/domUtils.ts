@@ -1,4 +1,8 @@
 export function isElementVisible(element: Element): boolean {
+  if (element.closest('[data-weblens-injected="true"]')) {
+    return false;
+  }
+
   if (!(element instanceof HTMLElement) && !(element instanceof SVGElement)) {
     return false;
   }

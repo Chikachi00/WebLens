@@ -8,7 +8,43 @@ export interface AuditRule {
   category: AuditCategory;
   severity: AuditSeverity;
   description: string;
+  supportsPreview: boolean;
   check: () => AuditIssue[];
+}
+
+export type PreviewFix = StylePreviewFix | AttributePreviewFix | CompositePreviewFix;
+
+export interface StylePreviewFix {
+  type: "style";
+  styles: Record<string, string>;
+}
+
+export interface AttributePreviewFix {
+  type: "attribute";
+  attribute: string;
+  value: string;
+}
+
+export interface CompositePreviewFix {
+  type: "composite";
+  operations: PreviewOperation[];
+}
+
+export type PreviewOperation =
+  | {
+      type: "style";
+      styles: Record<string, string>;
+    }
+  | {
+      type: "attribute";
+      attribute: string;
+      value: string;
+    };
+
+export interface PreviewFixOption {
+  label: string;
+  fix: PreviewFix;
+  note?: string;
 }
 
 export interface AuditIssue {
@@ -21,6 +57,12 @@ export interface AuditIssue {
   selector: string;
   elementTag: string;
   codeSuggestion?: string;
+  supportsPreview?: boolean;
+  previewFix?: PreviewFix;
+  previewFixOptions?: PreviewFixOption[];
+  previewBefore?: string[];
+  previewAfter?: string[];
+  previewNote?: string;
 }
 
 export interface IgnoredIssueRecord {
@@ -62,6 +104,21 @@ export interface AuditReport {
   disabledRuleIds: string[];
 }
 
+export interface PreviewActionResult {
+  success: boolean;
+  issueId?: string;
+  message?: string;
+  activePreviewCount: number;
+}
+
+export interface ActivePreview {
+  issueId: string;
+  ruleId: string;
+  selector: string;
+  appliedAt: string;
+  fix: PreviewFix;
+}
+
 export interface RunAuditPayload {
   enabledRuleIds: string[];
   ignoredIssues: IgnoredIssueRecord[];
@@ -71,9 +128,26 @@ export type ExtensionMessage =
   | { type: "RUN_AUDIT"; payload?: RunAuditPayload }
   | { type: "AUDIT_RESULT"; payload: AuditReport }
   | { type: "HIGHLIGHT_ELEMENT"; selector: string }
+  | {
+      type: "APPLY_FIX_PREVIEW";
+      payload: {
+        issueId: string;
+        ruleId: string;
+        selector: string;
+        fix: PreviewFix;
+      };
+    }
+  | {
+      type: "REVERT_FIX_PREVIEW";
+      payload: {
+        issueId: string;
+      };
+    }
+  | { type: "REVERT_ALL_FIX_PREVIEWS" }
+  | { type: "GET_ACTIVE_FIX_PREVIEWS" }
   | { type: "CLEAR_HIGHLIGHT" }
   | { type: "GET_PAGE_INFO" };
 
 export type ExtensionResponse =
-  | { ok: true; payload?: AuditReport | PageInfo | { highlighted: true } }
+  | { ok: true; payload?: AuditReport | PageInfo | PreviewActionResult | ActivePreview[] | { highlighted: true } }
   | { ok: false; error: string };

@@ -2,10 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExportMenu } from "./components/ExportMenu";
 import { FilterTabs, type IssueFilter } from "./components/FilterTabs";
 import { IssueCard } from "./components/IssueCard";
+import { PreviewStatusBar } from "./components/PreviewStatusBar";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { SummaryGrid } from "./components/SummaryGrid";
 import { Toast, type ToastState, type ToastType } from "./components/Toast";
-import { getActiveTab, requestAuditReport, requestElementHighlight, requestPageInfo, type ActiveTabInfo } from "./chromeApi";
+import { getActiveTab, requestAuditReport, requestElementHighlight, requestPageInfo, revertAllFixPreviewsInTab, type ActiveTabInfo } from "./chromeApi";
+import { useFixPreview } from "./hooks/useFixPreview";
 import {
   addIgnoredRecord,
   clearAllIgnoredRecords,
@@ -14,12 +16,12 @@ import {
   restoreDefaultRules,
   updateRuleEnabled
 } from "./services/settingsService";
+import { summarizeIssues } from "../shared/auditSummary";
 import { createJsonReport, createMarkdownReport, createSafeReportFilename } from "../shared/export";
 import { ALL_RULE_IDS } from "../shared/ruleMetadata";
-import { getEnabledRuleIds, createIgnoredIssueRecord, findMatchingIgnoredRecord, splitIssuesByIgnoredRecords } from "../shared/settings";
-import { getSiteTarget, normalizePageUrl } from "../shared/url";
-import { summarizeIssues } from "../shared/auditSummary";
+import { createIgnoredIssueRecord, findMatchingIgnoredRecord, getEnabledRuleIds, splitIssuesByIgnoredRecords } from "../shared/settings";
 import type { AuditIssue, AuditReport, IgnoredIssueRecord, PageInfo, WebLensSettings } from "../shared/types";
+import { getSiteTarget, normalizePageUrl } from "../shared/url";
 
 const emptySummary = { total: 0, critical: 0, warning: 0, info: 0 };
 const defaultSettings: WebLensSettings = { disabledRuleIds: [], ignoredIssues: [] };
@@ -35,12 +37,22 @@ export default function App() {
   const [showIgnored, setShowIgnored] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
 
-  const showToast = useCallback((type: ToastType, message: string) => {
-    setToast({ type, message });
-  }, []);
+  const showToast = useCallback((type: ToastType, message: string) => setToast({ type, message }), []);
   const dismissToast = useCallback(() => setToast(null), []);
-
   const enabledRuleIds = useMemo(() => getEnabledRuleIds(settings), [settings]);
+
+  const {
+    activePreviews,
+    pendingIssueId,
+    applyPreview,
+    revertPreview,
+    revertAllPreviews,
+    clearPreviewState,
+    isPreviewActive
+  } = useFixPreview(
+    (message) => showToast("error", message),
+    (message) => showToast("success", message)
+  );
 
   useEffect(() => {
     loadSettings()
@@ -57,9 +69,11 @@ export default function App() {
         const tab = await getActiveTab();
         setActiveTab(tab);
         if (clearCurrentReport) {
+          await revertAllPreviews();
+          clearPreviewState();
           setReport(null);
           setFilter("all");
-          showToast("info", "当前标签页已变化，请重新分析页面。");
+          showToast("info", "当前标签页或页面状态已变化，请重新分析页面。");
         }
 
         try {
@@ -68,30 +82,40 @@ export default function App() {
           setPageInfo({ title: tab.title || "无法读取当前页面", domain: tab.domain, url: tab.url });
         }
       } catch {
+        clearPreviewState();
         setPageInfo({ title: "无法读取当前页面", domain: "受限制页面", url: "" });
       }
     },
-    [showToast]
+    [clearPreviewState, revertAllPreviews, showToast]
   );
 
   useEffect(() => {
     refreshPageInfo(false);
 
-    const handleTabActivated = () => refreshPageInfo(true);
-    const handleTabUpdated = (tabId: number, changeInfo: chrome.tabs.TabChangeInfo) => {
-      if (activeTab?.id === tabId && changeInfo.status === "complete") {
+    const handleTabActivated = () => {
+      if (activeTab?.id) {
+        revertAllFixPreviewsInTab(activeTab.id).catch(() => {
+          // The old tab may be restricted or already gone; local state is cleared by refreshPageInfo.
+        });
+      }
+      refreshPageInfo(true);
+    };
+    const handleTabUpdated = (tabId: number, changeInfo: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) => {
+      const urlChanged = Boolean(changeInfo.url && activeTab?.url && changeInfo.url !== activeTab.url);
+      const completedCurrentTab = activeTab?.id === tabId && changeInfo.status === "complete";
+      const spaLikeUrlChange = activeTab?.id === tabId && Boolean(tab.url && activeTab.url && tab.url !== activeTab.url);
+      if (completedCurrentTab || urlChanged || spaLikeUrlChange) {
         refreshPageInfo(true);
       }
     };
 
     chrome.tabs.onActivated.addListener(handleTabActivated);
     chrome.tabs.onUpdated.addListener(handleTabUpdated);
-
     return () => {
       chrome.tabs.onActivated.removeListener(handleTabActivated);
       chrome.tabs.onUpdated.removeListener(handleTabUpdated);
     };
-  }, [activeTab?.id, refreshPageInfo]);
+  }, [activeTab?.id, activeTab?.url, refreshPageInfo]);
 
   const visibleIssues = useMemo(() => {
     const issues = report?.issues ?? [];
@@ -108,11 +132,18 @@ export default function App() {
       return;
     }
 
+    if (activePreviews.length > 0) {
+      const confirmed = window.confirm("重新分析会先撤销当前全部预览。是否继续？");
+      if (!confirmed) {
+        setIsLoading(false);
+        return;
+      }
+      await revertAllPreviews();
+      clearPreviewState();
+    }
+
     try {
-      const nextReport = await requestAuditReport({
-        enabledRuleIds,
-        ignoredIssues: settings.ignoredIssues
-      });
+      const nextReport = await requestAuditReport({ enabledRuleIds, ignoredIssues: settings.ignoredIssues });
       setReport(nextReport);
       setPageInfo(nextReport.page);
       setFilter("all");
@@ -126,7 +157,6 @@ export default function App() {
 
   async function locateIssue(issue: AuditIssue) {
     dismissToast();
-
     if (report && activeTab?.url && normalizePageUrl(report.page.url) !== normalizePageUrl(activeTab.url)) {
       showToast("error", "当前标签页已经变化，请重新分析后再定位元素。");
       return;
@@ -145,9 +175,7 @@ export default function App() {
   }
 
   async function ignoreIssue(issue: AuditIssue, scope: IgnoredIssueRecord["scope"]) {
-    if (!report) {
-      return;
-    }
+    if (!report) return;
 
     const target = scope === "page" ? normalizePageUrl(report.page.url) : getSiteTarget(report.page.url);
     if (!target) {
@@ -155,22 +183,17 @@ export default function App() {
       return;
     }
 
-    const record = createIgnoredIssueRecord({
-      issue,
-      scope,
-      target,
-      pageTitle: report.page.title
-    });
-    const nextSettings = await addIgnoredRecord(settings, record);
+    const nextSettings = await addIgnoredRecord(
+      settings,
+      createIgnoredIssueRecord({ issue, scope, target, pageTitle: report.page.title })
+    );
     setSettings(nextSettings);
     setReport(reapplyIgnoredRecords(report, nextSettings));
     showToast("success", scope === "page" ? "已在当前页面忽略该问题。" : "已在当前网站忽略该问题。");
   }
 
   async function restoreIgnoredIssue(issue: AuditIssue) {
-    if (!report) {
-      return;
-    }
+    if (!report) return;
 
     const record = findMatchingIgnoredRecord(
       issue,
@@ -194,6 +217,7 @@ export default function App() {
       const nextSettings = await updateRuleEnabled(settings, ruleId, enabled);
       setSettings(nextSettings);
       setReport(null);
+      clearPreviewState();
       showToast("success", "规则设置已保存，请重新分析当前页面。");
     } catch {
       showToast("error", "保存规则设置失败。");
@@ -204,35 +228,28 @@ export default function App() {
     const nextSettings = await restoreDefaultRules(settings);
     setSettings(nextSettings);
     setReport(null);
+    clearPreviewState();
     showToast("success", "已恢复默认规则，请重新分析当前页面。");
   }
 
   async function removeIgnored(recordId: string) {
     const nextSettings = await removeIgnoredRecord(settings, recordId);
     setSettings(nextSettings);
-    if (report) {
-      setReport(reapplyIgnoredRecords(report, nextSettings));
-    }
+    if (report) setReport(reapplyIgnoredRecords(report, nextSettings));
     showToast("success", "忽略记录已删除。");
   }
 
   async function clearIgnored() {
-    if (!window.confirm("确定要清除全部忽略记录吗？规则开关不会被修改。")) {
-      return;
-    }
+    if (!window.confirm("确定要清除全部忽略记录吗？规则开关不会被修改。")) return;
 
     const nextSettings = await clearAllIgnoredRecords(settings);
     setSettings(nextSettings);
-    if (report) {
-      setReport(reapplyIgnoredRecords(report, nextSettings));
-    }
+    if (report) setReport(reapplyIgnoredRecords(report, nextSettings));
     showToast("success", "已清除全部忽略记录。");
   }
 
   function exportReport(format: "md" | "json") {
-    if (!report) {
-      return;
-    }
+    if (!report) return;
 
     const content = format === "md" ? createMarkdownReport(report) : createJsonReport(report);
     const type = format === "md" ? "text/markdown;charset=utf-8" : "application/json;charset=utf-8";
@@ -264,12 +281,10 @@ export default function App() {
         </div>
 
         <section className="rounded-md border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-slate-950 dark:text-slate-50">
-              {pageInfo?.title ?? "正在读取页面信息"}
-            </p>
-            <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">{pageInfo?.domain ?? "..."}</p>
-          </div>
+          <p className="truncate text-sm font-medium text-slate-950 dark:text-slate-50">
+            {pageInfo?.title ?? "正在读取页面信息"}
+          </p>
+          <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400">{pageInfo?.domain ?? "..."}</p>
           <button
             type="button"
             onClick={runAudit}
@@ -282,7 +297,7 @@ export default function App() {
       </header>
 
       <Toast toast={toast} onDismiss={dismissToast} />
-
+      <PreviewStatusBar count={activePreviews.length} onRevertAll={revertAllPreviews} />
       <SummaryGrid summary={report?.summary ?? emptySummary} />
 
       {report ? (
@@ -314,7 +329,6 @@ export default function App() {
               normalizePageUrl(report.page.url),
               getSiteTarget(report.page.url)
             );
-
             return (
               <div key={issue.id} className="rounded border border-slate-200 p-2 text-sm dark:border-slate-700">
                 <div className="font-medium text-slate-900 dark:text-slate-100">{issue.title}</div>
@@ -358,7 +372,17 @@ export default function App() {
         ) : null}
 
         {visibleIssues.map((issue) => (
-          <IssueCard key={issue.id} issue={issue} onLocate={locateIssue} onCopy={copyCode} onIgnore={ignoreIssue} />
+          <IssueCard
+            key={issue.id}
+            issue={issue}
+            onLocate={locateIssue}
+            onCopy={copyCode}
+            onIgnore={ignoreIssue}
+            onApplyPreview={applyPreview}
+            onRevertPreview={revertPreview}
+            isPreviewActive={isPreviewActive(issue.id)}
+            isPreviewPending={pendingIssueId === issue.id}
+          />
         ))}
       </section>
 
@@ -376,10 +400,12 @@ export default function App() {
 }
 
 function reapplyIgnoredRecords(report: AuditReport, settings: WebLensSettings): AuditReport {
-  const pageTarget = normalizePageUrl(report.page.url);
-  const siteTarget = getSiteTarget(report.page.url);
-  const allIssues = [...report.issues, ...report.ignoredIssues];
-  const split = splitIssuesByIgnoredRecords(allIssues, settings.ignoredIssues, pageTarget, siteTarget);
+  const split = splitIssuesByIgnoredRecords(
+    [...report.issues, ...report.ignoredIssues],
+    settings.ignoredIssues,
+    normalizePageUrl(report.page.url),
+    getSiteTarget(report.page.url)
+  );
 
   return {
     ...report,

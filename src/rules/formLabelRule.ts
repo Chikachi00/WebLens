@@ -8,6 +8,7 @@ export const formLabelRule: AuditRule = {
   title: "表单控件缺少可访问标签",
   category: "accessibility",
   severity: "critical",
+  supportsPreview: false,
   description: "输入控件需要可被辅助技术识别的标签。",
   check: () => {
     return Array.from(document.querySelectorAll("input, textarea, select"))
