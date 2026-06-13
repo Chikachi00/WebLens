@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WebLens Overflow Fixture</title>
+    <link rel="stylesheet" href="./fixture.css" />
+  </head>
+  <body>
+    <main>
+      <h1>横向溢出测试</h1>
+
+      <section>
+        <h2>固定宽度容器</h2>
+        <div class="wide-fixed" data-testid="wide-fixed">这个容器故意超过常见视口宽度。</div>
+      </section>
+
+      <section>
+        <h2>超宽媒体</h2>
+        <div class="wide-image" role="img" aria-label="超宽示例图" data-testid="wide-image"></div>
+      </section>
+
+      <section>
+        <h2>长文本</h2>
+        <p class="long-token" data-testid="long-token">
+          superlongunbreakabletokensuperlongunbreakabletokensuperlongunbreakabletokensuperlongunbreakabletoken
+        </p>
+      </section>
+
+      <section>
+        <h2>定位和位移</h2>
+        <div class="transformed" data-testid="transformed">transform 位移导致溢出。</div>
+        <div class="negative-margin" data-testid="negative-margin">负 margin 示例。</div>
+      </section>
+
+      <section>
+        <h2>合理横向滚动</h2>
+        <div class="table-scroll" data-testid="table-scroll">
+          <table class="wide-table" data-testid="wide-table">
+            <tr>
+              <th>列 A</th>
+              <th>列 B</th>
+              <th>列 C</th>
+              <th>列 D</th>
+              <th>列 E</th>
+            </tr>
+            <tr>
+              <td>局部滚动容器内部的宽表格不应作为页面级溢出根因。</td>
+              <td>内容</td>
+              <td>内容</td>
+              <td>内容</td>
+              <td>内容</td>
+            </tr>
+          </table>
+        </div>
+        <pre data-testid="code-scroll"><code>const value = "averyveryveryveryveryveryveryveryveryverylongstring";</code></pre>
+      </section>
+    </main>
+  </body>
+</html>

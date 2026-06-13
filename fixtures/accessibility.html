@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WebLens Accessibility Fixture</title>
+    <link rel="stylesheet" href="./fixture.css" />
+  </head>
+  <body>
+    <main>
+      <h1>可访问性问题测试</h1>
+      <section>
+        <h4>跳跃标题</h4>
+        <img
+          data-testid="missing-alt"
+          src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='80'%3E%3Crect width='120' height='80' fill='%23fca5a5'/%3E%3C/svg%3E"
+        />
+        <input type="email" data-testid="unlabeled-input" />
+        <button type="button" data-testid="unnamed-button">
+          <svg width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6"></circle></svg>
+        </button>
+        <a href="#empty" data-testid="unnamed-link">
+          <svg width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6"></circle></svg>
+        </a>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WebLens Touch Targets Fixture</title>
+    <link rel="stylesheet" href="./fixture.css" />
+  </head>
+  <body>
+    <main>
+      <h1>目标尺寸测试</h1>
+      <section>
+        <h2>通过示例</h2>
+        <button type="button" class="minimum-target" data-testid="target-24">24</button>
+        <button type="button" class="comfortable-target" data-testid="target-44">OK</button>
+        <button type="button" class="desktop-button" data-testid="desktop-38">普通桌面按钮</button>
+        <p>
+          段落中的
+          <a href="#inline" data-testid="inline-link">行内文本链接</a>
+          默认不作为目标尺寸问题。
+        </p>
+      </section>
+
+      <section>
+        <h2>尺寸和间距问题</h2>
+        <div class="tight-row" data-testid="tight-target-row">
+          <button type="button" class="tiny-target" data-testid="tiny-tight-a" aria-label="上一个">‹</button>
+          <button type="button" class="tiny-target" data-testid="tiny-tight-b" aria-label="下一个">›</button>
+        </div>
+        <div class="spaced-row" data-testid="spaced-target-row">
+          <button type="button" class="tiny-target" data-testid="tiny-spaced-a" aria-label="减少">-</button>
+          <button type="button" class="tiny-target" data-testid="tiny-spaced-b" aria-label="增加">+</button>
+        </div>
+        <a class="icon-link" href="#icon" data-testid="icon-link" aria-label="搜索">
+          <svg width="14" height="14" aria-hidden="true" viewBox="0 0 16 16">
+            <circle cx="7" cy="7" r="4" fill="currentColor"></circle>
+          </svg>
+        </a>
+        <button type="button" class="tiny-target" data-testid="disabled-small" disabled>×</button>
+        <button type="button" class="tiny-target" data-weblens-injected="true" data-testid="injected-small">W</button>
+      </section>
+
+      <section>
+        <h2>触控上下文说明</h2>
+        <p>在 coarse pointer 或窄屏环境下，24–43px 的目标会作为触控舒适度提示，而不是 WCAG 违规。</p>
+      </section>
+    </main>
+  </body>
+</html>

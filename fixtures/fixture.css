@@ -1,0 +1,129 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: Arial, "Microsoft YaHei", sans-serif;
+  color: #172033;
+  background: #f6f8fb;
+}
+
+body {
+  margin: 0;
+  padding: 24px;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+section {
+  margin: 24px 0;
+  padding: 16px;
+  border: 1px solid #d6dce8;
+  border-radius: 8px;
+  background: #fff;
+}
+
+button,
+.button-link {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid #94a3b8;
+  border-radius: 6px;
+  background: #fff;
+  color: #172033;
+}
+
+.comfortable-target {
+  width: 44px;
+  height: 44px;
+}
+
+.minimum-target {
+  width: 24px;
+  height: 24px;
+  min-height: 24px;
+  padding: 0;
+}
+
+.tiny-target {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  padding: 0;
+}
+
+.tight-row {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.spaced-row {
+  display: flex;
+  gap: 36px;
+  align-items: center;
+}
+
+.icon-link {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+}
+
+.desktop-button {
+  width: 216px;
+  height: 38px;
+}
+
+.wide-fixed {
+  width: 1200px;
+  padding: 16px;
+  background: #fee2e2;
+}
+
+.wide-image {
+  display: block;
+  width: 1100px;
+  max-width: none;
+  height: 120px;
+  background: linear-gradient(90deg, #bae6fd, #fef08a);
+}
+
+.long-token {
+  white-space: nowrap;
+}
+
+.transformed {
+  width: 500px;
+  transform: translateX(620px);
+  background: #e0f2fe;
+}
+
+.negative-margin {
+  width: 420px;
+  margin-left: -80px;
+  background: #fef3c7;
+}
+
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid #cbd5e1;
+}
+
+.wide-table {
+  min-width: 1100px;
+}
+
+pre {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 12px;
+  background: #0f172a;
+  color: #e2e8f0;
+}

@@ -28,14 +28,14 @@ export const RULE_METADATA: RuleMetadata[] = [
   },
   {
     id: "touch-target",
-    title: "点击区域过小",
-    description: "检测按钮、链接等交互元素是否过小。",
+    title: "目标尺寸或间距不足",
+    description: "检测按钮、链接等交互目标是否过小、过近，或在触控场景下不够舒适。",
     severity: "info"
   },
   {
     id: "horizontal-overflow",
     title: "页面横向溢出",
-    description: "检测页面是否出现意外横向滚动。",
+    description: "检测页面是否出现意外横向滚动，并列出可疑根因元素。",
     severity: "warning"
   },
   {

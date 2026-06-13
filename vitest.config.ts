@@ -10,6 +10,7 @@ export default defineConfig({
       }
     },
     globals: true,
-    setupFiles: ["./src/test/setup.ts"]
+    setupFiles: ["./src/test/setup.ts"],
+    exclude: ["tests/browser/**", "node_modules/**", "dist/**", "release/**"]
   }
 });

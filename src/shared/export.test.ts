@@ -18,7 +18,15 @@ const report: AuditReport = {
       recommendation: "使用 label、aria-label 或 aria-labelledby。",
       selector: "input#email",
       elementTag: "input",
-      codeSuggestion: '<label for="email">邮箱</label>\n<input id="email" type="email">'
+      codeSuggestion: '<label for="email">邮箱</label>\n<input id="email" type="email">',
+      diagnostics: {
+        confidence: "high",
+        standard: "WebLens rule",
+        reasonCode: "missing-label",
+        measured: {
+          hasLabel: false
+        }
+      }
     }
   ],
   ignoredIssues: [],
@@ -29,21 +37,25 @@ const report: AuditReport = {
 };
 
 describe("report export", () => {
-  it("creates parseable JSON", () => {
+  it("creates parseable JSON with diagnostics", () => {
     const parsed = JSON.parse(createJsonReport(report));
 
     expect(parsed.schemaVersion).toBe("1.0");
+    expect(parsed.app.version).toBe("0.4.0");
     expect(parsed.summary.total).toBe(1);
     expect(parsed.summary.ignored).toBe(0);
+    expect(parsed.issues[0].diagnostics.reasonCode).toBe("missing-label");
   });
 
-  it("creates Markdown with page information and grouped issues", () => {
+  it("creates Markdown with page information, grouped issues, and diagnostics", () => {
     const markdown = createMarkdownReport(report, new Date("2026-06-14T06:30:00"));
 
     expect(markdown).toContain("# WebLens 网页检测报告");
     expect(markdown).toContain("修复预览只在当前浏览器页面中临时生效");
     expect(markdown).toContain("Example \\| Page \\[Test\\]");
     expect(markdown).toContain("## 严重问题");
+    expect(markdown).toContain("检测依据");
+    expect(markdown).toContain("原因代码：`missing-label`");
     expect(markdown).toContain("```html");
   });
 

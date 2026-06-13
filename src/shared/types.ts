@@ -2,6 +2,16 @@ export type AuditSeverity = "critical" | "warning" | "info";
 
 export type AuditCategory = "accessibility" | "semantics" | "layout" | "usability";
 
+export type AuditConfidence = "high" | "medium" | "low";
+
+export interface AuditDiagnostics {
+  confidence: AuditConfidence;
+  standard?: string;
+  measured?: Record<string, string | number | boolean>;
+  reasonCode?: string;
+  note?: string;
+}
+
 export interface AuditRule {
   id: string;
   title: string;
@@ -63,6 +73,7 @@ export interface AuditIssue {
   previewBefore?: string[];
   previewAfter?: string[];
   previewNote?: string;
+  diagnostics?: AuditDiagnostics;
 }
 
 export interface IgnoredIssueRecord {

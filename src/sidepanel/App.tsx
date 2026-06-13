@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ExportMenu } from "./components/ExportMenu";
 import { FilterTabs, type IssueFilter } from "./components/FilterTabs";
-import { IssueCard } from "./components/IssueCard";
+import { IssueGroup } from "./components/IssueGroup";
 import { PreviewStatusBar } from "./components/PreviewStatusBar";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { SummaryGrid } from "./components/SummaryGrid";
 import { Toast, type ToastState, type ToastType } from "./components/Toast";
 import { getActiveTab, requestAuditReport, requestElementHighlight, requestPageInfo, revertAllFixPreviewsInTab, type ActiveTabInfo } from "./chromeApi";
 import { useFixPreview } from "./hooks/useFixPreview";
+import { groupIssuesByRule } from "./issueGrouping";
 import {
   addIgnoredRecord,
   clearAllIgnoredRecords,
@@ -121,6 +122,8 @@ export default function App() {
     const issues = report?.issues ?? [];
     return filter === "all" ? issues : issues.filter((issue) => issue.severity === filter);
   }, [filter, report]);
+
+  const visibleGroups = useMemo(() => groupIssuesByRule(visibleIssues), [visibleIssues]);
 
   async function runAudit() {
     setIsLoading(true);
@@ -371,17 +374,17 @@ export default function App() {
           </div>
         ) : null}
 
-        {visibleIssues.map((issue) => (
-          <IssueCard
-            key={issue.id}
-            issue={issue}
+        {visibleGroups.map((group) => (
+          <IssueGroup
+            key={group.ruleId}
+            group={group}
             onLocate={locateIssue}
             onCopy={copyCode}
             onIgnore={ignoreIssue}
             onApplyPreview={applyPreview}
             onRevertPreview={revertPreview}
-            isPreviewActive={isPreviewActive(issue.id)}
-            isPreviewPending={pendingIssueId === issue.id}
+            isPreviewActive={isPreviewActive}
+            pendingIssueId={pendingIssueId}
           />
         ))}
       </section>

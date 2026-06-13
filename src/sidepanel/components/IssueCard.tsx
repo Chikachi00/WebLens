@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { IssueDiagnostics } from "./IssueDiagnostics";
 import { SeverityBadge } from "./Badge";
 import { PreviewComparison } from "./PreviewComparison";
 import type { AuditIssue, IgnoredIssueRecord, PreviewFix } from "../../shared/types";
@@ -98,6 +99,7 @@ export function IssueCard({
       {expanded ? (
         <div className="mt-3 border-t border-slate-200 pt-3 dark:border-slate-700">
           <p className="text-sm leading-5 text-slate-700 dark:text-slate-200">{issue.recommendation}</p>
+          <IssueDiagnostics diagnostics={issue.diagnostics} />
           <PreviewComparison issue={issue} />
 
           {issue.supportsPreview && issue.previewFix ? (

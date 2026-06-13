@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WebLens Mixed Product Fixture</title>
+    <link rel="stylesheet" href="./fixture.css" />
+  </head>
+  <body>
+    <main>
+      <h1>产品设置</h1>
+      <section>
+        <h2>账户</h2>
+        <label for="name">姓名</label>
+        <input id="name" />
+        <button type="button" class="desktop-button">保存账户</button>
+      </section>
+      <section>
+        <h2>快捷操作</h2>
+        <div class="tight-row">
+          <button type="button" class="tiny-target" aria-label="上一项">‹</button>
+          <button type="button" class="tiny-target" aria-label="下一项">›</button>
+        </div>
+        <button type="button">
+          <svg width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6"></circle></svg>
+        </button>
+      </section>
+      <section>
+        <h2>报表</h2>
+        <div class="table-scroll">
+          <table class="wide-table">
+            <tr>
+              <th>一月</th>
+              <th>二月</th>
+              <th>三月</th>
+              <th>四月</th>
+            </tr>
+            <tr>
+              <td>正常局部滚动</td>
+              <td>12</td>
+              <td>18</td>
+              <td>20</td>
+            </tr>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

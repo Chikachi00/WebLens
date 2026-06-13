@@ -1,8 +1,8 @@
 import { getPreviewType } from "./preview";
 import { getRuleTitle } from "./ruleMetadata";
-import type { AuditIssue, AuditReport } from "./types";
+import type { AuditDiagnostics, AuditIssue, AuditReport } from "./types";
 
-export const WEBLENS_VERSION = "0.3.0";
+export const WEBLENS_VERSION = "0.4.0";
 
 export interface ExportedAuditReport {
   schemaVersion: "1.0";
@@ -127,11 +127,37 @@ function appendIssueSection(lines: string[], title: string, issues: AuditIssue[]
     lines.push(`- 说明：${escapeMarkdownText(issue.description)}`);
     lines.push(`- 建议：${escapeMarkdownText(issue.recommendation)}`);
     lines.push(`- 支持预览：${issue.supportsPreview ? "是" : "否"}`);
+    appendDiagnostics(lines, issue.diagnostics);
     if (issue.codeSuggestion) {
       lines.push("- 修复示例：", "", "```html", issue.codeSuggestion, "```");
     }
     lines.push("");
   }
+}
+
+function appendDiagnostics(lines: string[], diagnostics?: AuditDiagnostics): void {
+  if (!diagnostics) {
+    return;
+  }
+
+  lines.push("- 检测依据：");
+  if (diagnostics.standard) {
+    lines.push(`  - 参考标准：${escapeMarkdownText(diagnostics.standard)}`);
+  }
+  lines.push(`  - 置信度：${confidenceLabel(diagnostics.confidence)}`);
+  if (diagnostics.reasonCode) {
+    lines.push(`  - 原因代码：\`${escapeCodeSpan(diagnostics.reasonCode)}\``);
+  }
+  for (const [key, value] of Object.entries(diagnostics.measured ?? {})) {
+    lines.push(`  - ${escapeMarkdownText(key)}：${escapeMarkdownText(String(value))}`);
+  }
+  if (diagnostics.note) {
+    lines.push(`  - 备注：${escapeMarkdownText(diagnostics.note)}`);
+  }
+}
+
+function confidenceLabel(confidence: AuditDiagnostics["confidence"]): string {
+  return { high: "高", medium: "中", low: "低" }[confidence];
 }
 
 function escapeMarkdownText(value: string): string {
